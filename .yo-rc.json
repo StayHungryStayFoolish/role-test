@@ -1,0 +1,40 @@
+{
+  "generator-jhipster": {
+    "promptValues": {
+      "packageName": "io.stayhungrystayfoolish.github",
+      "nativeLanguage": "zh-cn"
+    },
+    "jhipsterVersion": "5.5.0",
+    "applicationType": "monolith",
+    "baseName": "RoleTest",
+    "packageName": "io.stayhungrystayfoolish.github",
+    "packageFolder": "io/stayhungrystayfoolish/github",
+    "serverPort": "8080",
+    "authenticationType": "jwt",
+    "cacheProvider": "ehcache",
+    "enableHibernateCache": true,
+    "websocket": "spring-websocket",
+    "databaseType": "sql",
+    "devDatabaseType": "mysql",
+    "prodDatabaseType": "mysql",
+    "searchEngine": "elasticsearch",
+    "messageBroker": false,
+    "serviceDiscoveryType": false,
+    "buildTool": "maven",
+    "enableSwaggerCodegen": false,
+    "jwtSecretKey": "ODBmN2RiY2ZkNDIwODYxY2FkMzJiZThhNDRhYmIyOGE5YTJhYmFhNzllNzYyZTE5NTM0MzIwNWZmNTU0ZTExOTdmNWVlZTczMzQ1OGZmYTE2ZTQxNmZjNWI0ZWQ1MWU5NDZkYjJkYjQ5NzgwNThjNjMzMjM3MDQzNTkxZTE1OTM=",
+    "clientFramework": "react",
+    "useSass": true,
+    "clientPackageManager": "npm",
+    "testFrameworks": [
+      "gatling"
+    ],
+    "jhiPrefix": "jhi",
+    "enableTranslation": true,
+    "nativeLanguage": "zh-cn",
+    "languages": [
+      "zh-cn",
+      "en"
+    ]
+  }
+}
