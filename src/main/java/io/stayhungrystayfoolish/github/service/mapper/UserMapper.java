@@ -42,6 +42,7 @@ public class UserMapper {
             user.setImageUrl(userDTO.getImageUrl());
             user.setActivated(userDTO.isActivated());
             user.setLangKey(userDTO.getLangKey());
+            user.setRole(userDTO.getRole());
             Set<Authority> authorities = this.authoritiesFromStrings(userDTO.getAuthorities());
             if (authorities != null) {
                 user.setAuthorities(authorities);
@@ -67,6 +68,9 @@ public class UserMapper {
     }
 
     public Set<Authority> authoritiesFromStrings(Set<String> strings) {
+        if (null == strings || 0 == strings.size()) {
+            return null;
+        }
         return strings.stream().map(string -> {
             Authority auth = new Authority();
             auth.setName(string);

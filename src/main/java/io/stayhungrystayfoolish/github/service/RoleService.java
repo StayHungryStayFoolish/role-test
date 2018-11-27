@@ -28,6 +28,7 @@ public interface RoleService {
      */
     Page<RoleDTO> findAll(Pageable pageable);
 
+    RoleDTO findByRoleName(String roleName);
 
     /**
      * Get the "id" role.

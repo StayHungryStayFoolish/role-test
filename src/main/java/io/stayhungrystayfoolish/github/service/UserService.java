@@ -2,16 +2,20 @@ package io.stayhungrystayfoolish.github.service;
 
 import io.stayhungrystayfoolish.github.config.Constants;
 import io.stayhungrystayfoolish.github.domain.Authority;
+import io.stayhungrystayfoolish.github.domain.Role;
 import io.stayhungrystayfoolish.github.domain.User;
 import io.stayhungrystayfoolish.github.repository.AuthorityRepository;
+import io.stayhungrystayfoolish.github.repository.RoleRepository;
 import io.stayhungrystayfoolish.github.repository.UserRepository;
 import io.stayhungrystayfoolish.github.repository.search.UserSearchRepository;
 import io.stayhungrystayfoolish.github.security.AuthoritiesConstants;
 import io.stayhungrystayfoolish.github.security.SecurityUtils;
 import io.stayhungrystayfoolish.github.service.dto.UserDTO;
+import io.stayhungrystayfoolish.github.service.mapper.UserMapper;
 import io.stayhungrystayfoolish.github.service.util.RandomUtil;
 import io.stayhungrystayfoolish.github.web.rest.errors.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
@@ -36,6 +40,8 @@ public class UserService {
 
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
+    private final UserMapper userMapper;
+
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
@@ -46,12 +52,16 @@ public class UserService {
 
     private final CacheManager cacheManager;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository, AuthorityRepository authorityRepository, CacheManager cacheManager) {
+    private final RoleRepository roleRepository;
+
+    public UserService(UserMapper userMapper, UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository, AuthorityRepository authorityRepository, CacheManager cacheManager, RoleRepository roleRepository) {
+        this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSearchRepository = userSearchRepository;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
+        this.roleRepository = roleRepository;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -109,7 +119,6 @@ public class UserService {
         String encryptedPassword = passwordEncoder.encode(password);
         newUser.setLogin(userDTO.getLogin().toLowerCase());
         // new user gets initially a generated password
-        newUser.setPassword(encryptedPassword);
         newUser.setFirstName(userDTO.getFirstName());
         newUser.setLastName(userDTO.getLastName());
         newUser.setEmail(userDTO.getEmail().toLowerCase());
@@ -118,10 +127,13 @@ public class UserService {
         // new user is not active
         newUser.setActivated(false);
         // new user gets registration key
+
+        newUser = userMapper.userDTOToUser(userDTO);
+
+        newUser = setAuthoritiesByRoleName(newUser);
         newUser.setActivationKey(RandomUtil.generateActivationKey());
-        Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-        newUser.setAuthorities(authorities);
+        newUser.setPassword(encryptedPassword);
+
         userRepository.save(newUser);
         userSearchRepository.save(newUser);
         this.clearUserCaches(newUser);
@@ -301,4 +313,32 @@ public class UserService {
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
     }
+
+
+    private User setAuthoritiesByRoleName(User user) {
+        String roleName = user.getRole();
+        user.setRole(roleName);
+        Set<Authority> authorities = new HashSet<>();
+        if (StringUtils.isNoneBlank(roleName)) {
+            Role role = roleRepository.findByRoleName(roleName);
+            if (null != role) {
+                String authorityName = role.getAuthorityName();
+                if (authorityName.contains(",")) {
+
+                    String[] authorityArr = authorityName.split(",");
+                    for (String authority : authorityArr) {
+                        authorityRepository.findById(authority).ifPresent(authorities::add);
+                    }
+                } else {
+                    authorityRepository.findById(authorityName).ifPresent(authorities::add);
+                }
+            }
+        }
+        if (0 == authorities.size()) {
+            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+        }
+        user.setAuthorities(authorities);
+        return user;
+    }
+
 }

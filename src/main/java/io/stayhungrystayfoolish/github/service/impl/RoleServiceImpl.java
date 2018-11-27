@@ -70,6 +70,13 @@ public class RoleServiceImpl implements RoleService {
             .map(roleMapper::toDto);
     }
 
+    @Override
+    public RoleDTO findByRoleName(String roleName) {
+        Role role = roleRepository.findByRoleName(roleName);
+        return roleMapper.toDto(role);
+
+    }
+
 
     /**
      * Get one role by id.
